@@ -1,0 +1,1 @@
+﻿<%@ Class="WebServiceTest2.TTTMApi" %>
