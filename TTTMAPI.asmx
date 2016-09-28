@@ -1,1 +1,1 @@
-﻿<%@ Class="WebServiceTest2.TTTMApi" %>
+﻿<%@ WebService Language="C#" CodeBehind="TTTMAPI.asmx.cs"  Class="WebServiceTest2.TTTMApi" %>
