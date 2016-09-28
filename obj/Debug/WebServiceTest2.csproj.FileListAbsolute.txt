@@ -17,5 +17,3 @@ F:\Cloud\То што я деляль\Код\C#\WebServiceTest2\bin\WebServiceTes
 F:\Cloud\То што я деляль\Код\C#\WebServiceTest2\obj\Debug\WebServiceTest2.csprojResolveAssemblyReference.cache
 F:\Cloud\То што я деляль\Код\C#\WebServiceTest2\obj\Debug\WebServiceTest2.dll
 F:\Cloud\То што я деляль\Код\C#\WebServiceTest2\obj\Debug\WebServiceTest2.pdb
-F:\Cloud\То што я деляль\Код\C#\WebServiceTest2\obj\Debug\WebServiceTest2.TTTMApi.resources
-F:\Cloud\То што я деляль\Код\C#\WebServiceTest2\obj\Debug\WebServiceTest2.csproj.GenerateResource.Cache
