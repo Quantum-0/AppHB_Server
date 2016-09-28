@@ -118,9 +118,14 @@
     <Compile Include="Test2.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TTTMApi.cs">
+    <Compile Include="TTTMAPI.asmx.cs">
       <SubType>Component</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="TTTMAPI.asmx.resx">
+      <DependentUpon>TTTMAPI.asmx.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
