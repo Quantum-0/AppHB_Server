@@ -41,7 +41,7 @@ namespace WebServiceTest2
                 IP = request.ServerVariables["REMOTE_ADDR"];//.UserHostAddress;
             var AK = Hash(Name + IP + Port.ToString() + DateTime.Now.ToString());
             Servers.Add(new Server(IP, Name, Port, Color, AK));
-            var ping = PingHost(IP, Port);
+            var ping = PingHost("127.0.0.1", Port);
             var Result = new CreatingResult() { Created = true, Ping = ping, AccessKey = AK };
             return Result;
         }
@@ -53,11 +53,17 @@ namespace WebServiceTest2
             return new RemovingResult() { Result = Servers.RemoveAll(s => s.CheckAK(AccessKey)) > 0 };
         }
 
-        public static bool PingHost(string _HostURI, int _PortNumber)
+        [WebMethod(Description = "Пинг сервера")]
+        [ScriptMethod(UseHttpGet = true)]
+        public bool PingHost(string _HostURI, int _PortNumber)
         {
             try
             {
-                TcpClient client = new TcpClient(_HostURI, _PortNumber);
+                TcpClient client = new TcpClient();
+                client.ReceiveTimeout = 1000;
+                client.SendTimeout = 1000;
+                client.Connect(_HostURI, _PortNumber);
+                client.Close();
                 return true;
             }
             catch (Exception ex)
