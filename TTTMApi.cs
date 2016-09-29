@@ -26,19 +26,27 @@ namespace WebServiceTest2
 
         [WebMethod(Description = "Добавление своего сервера в список серверов")]
         [ScriptMethod(UseHttpGet = true)]
-        public string Add(string Name, int Port)
+        public CreatingResult Add(string Name, int Port)
         {
             var request = this.Context.Request;
-            var IP = request.UserHostAddress;
-            Servers.Add(new Server(IP, Name, Port));
-            return Hash(Name + IP + Port.ToString());
+            var IP = string.Empty;
+            if (request.ServerVariables.AllKeys.Contains("HTTP_CLIENT_IP"))
+                IP = request.ServerVariables["HTTP_CLIENT_IP"];
+            else if (request.ServerVariables.AllKeys.Contains("HTTP_X_FORWARDED_FOR"))
+                IP = request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+            else
+                IP = request.ServerVariables["REMOTE_ADDR"];//.UserHostAddress;
+            var AK = Hash(Name + IP + Port.ToString());
+            Servers.Add(new Server(IP, Name, Port, AK));
+            var Result = new CreatingResult() { Created = true, Ping = false, AccessKey = AK };
+            return Result;
         }
 
         [WebMethod(Description = "Удаление своего сервера из списка серверов")]
         [ScriptMethod(UseHttpGet = true)]
-        public bool Remove(string Name)
+        public bool Remove(string AccessKey)
         {
-            return Servers.RemoveAll(s => s.Name == Name) > 0;
+            return Servers.RemoveAll(s => s.AccessKey == AccessKey) > 0;
         }
 
         static string Hash(string input)
@@ -59,21 +67,30 @@ namespace WebServiceTest2
         }
     }
 
+    public class CreatingResult
+    {
+        public bool Created { get; set; }
+        public bool Ping { get; set; }
+        public string AccessKey { get; set; }
+    }
+
     public class Server
     {
         public string IP { get; set; }
         public string Name { get; set; }
         public int Port { get; set; }
+        public string AccessKey { get; set; }
 
         public Server()
         {
 
         }
-        public Server(string IP, string Name, int Port)
+        public Server(string IP, string Name, int Port, string AK)
         {
             this.IP = IP;
             this.Name = Name;
             this.Port = Port;
+            this.AccessKey = AK;
         }
     }
 
