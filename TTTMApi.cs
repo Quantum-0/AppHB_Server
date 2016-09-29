@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -37,9 +39,10 @@ namespace WebServiceTest2
                 IP = request.ServerVariables["HTTP_X_FORWARDED_FOR"];
             else
                 IP = request.ServerVariables["REMOTE_ADDR"];//.UserHostAddress;
-            var AK = Hash(Name + IP + Port.ToString());
+            var AK = Hash(Name + IP + Port.ToString() + DateTime.Now.ToString());
             Servers.Add(new Server(IP, Name, Port, Color, AK));
-            var Result = new CreatingResult() { Created = true, Ping = false, AccessKey = AK };
+            var ping = PingHost(IP, Port);
+            var Result = new CreatingResult() { Created = true, Ping = ping, AccessKey = AK };
             return Result;
         }
 
@@ -48,6 +51,19 @@ namespace WebServiceTest2
         public RemovingResult Remove(string AccessKey)
         {
             return new RemovingResult() { Result = Servers.RemoveAll(s => s.CheckAK(AccessKey)) > 0 };
+        }
+
+        public static bool PingHost(string _HostURI, int _PortNumber)
+        {
+            try
+            {
+                TcpClient client = new TcpClient(_HostURI, _PortNumber);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
         static string Hash(string input)
