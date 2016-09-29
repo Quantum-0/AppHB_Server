@@ -15,12 +15,13 @@ namespace WebServiceTest2
     [ScriptService]
     public class TTTMApiClass : WebService
     {
-        private static List<Server> Servers = new List<Server>();
+        private static List<Server> Servers = new List<Server>();        
 
         [WebMethod(Description = "Получение списка серверов")]
         [ScriptMethod(UseHttpGet = true)]
         public List<Server> Get()
         {
+            Servers.RemoveAll(s => DateTime.Now.Subtract(s.CreationDate).TotalMinutes > 10);
             return Servers;
         }
 
@@ -44,9 +45,9 @@ namespace WebServiceTest2
 
         [WebMethod(Description = "Удаление своего сервера из списка серверов")]
         [ScriptMethod(UseHttpGet = true)]
-        public bool Remove(string AccessKey)
+        public RemovingResult Remove(string AccessKey)
         {
-            return Servers.RemoveAll(s => s.AccessKey == AccessKey) > 0;
+            return new RemovingResult() { Result = Servers.RemoveAll(s => s.CheckAK(AccessKey)) > 0 };
         }
 
         static string Hash(string input)
@@ -74,23 +75,36 @@ namespace WebServiceTest2
         public string AccessKey { get; set; }
     }
 
+    public class RemovingResult
+    {
+        public bool Result;
+    }
+
     public class Server
     {
         public string IP { get; set; }
         public string Name { get; set; }
         public int Port { get; set; }
-        public string AccessKey { get; set; }
+        private string AccessKey;
+        public DateTime CreationDate { get; set; }
+
+        public bool CheckAK(string AK)
+        {
+            return (AccessKey == AK);
+        }
 
         public Server()
         {
 
         }
+
         public Server(string IP, string Name, int Port, string AK)
         {
             this.IP = IP;
             this.Name = Name;
             this.Port = Port;
             this.AccessKey = AK;
+            CreationDate = DateTime.Now;
         }
     }
 
