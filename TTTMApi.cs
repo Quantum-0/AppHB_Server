@@ -57,6 +57,8 @@ namespace WebServiceTest2
         [ScriptMethod(UseHttpGet = true)]
         public bool PingHost(string _HostURI, int _PortNumber)
         {
+            return false;
+
             try
             {
                 TcpClient client = new TcpClient();
