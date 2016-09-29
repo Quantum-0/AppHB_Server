@@ -27,7 +27,7 @@ namespace WebServiceTest2
 
         [WebMethod(Description = "Добавление своего сервера в список серверов")]
         [ScriptMethod(UseHttpGet = true)]
-        public CreatingResult Add(string Name, int Port)
+        public CreatingResult Add(string Name, int Port, int Color)
         {
             var request = this.Context.Request;
             var IP = string.Empty;
@@ -38,7 +38,7 @@ namespace WebServiceTest2
             else
                 IP = request.ServerVariables["REMOTE_ADDR"];//.UserHostAddress;
             var AK = Hash(Name + IP + Port.ToString());
-            Servers.Add(new Server(IP, Name, Port, AK));
+            Servers.Add(new Server(IP, Name, Port, Color, AK));
             var Result = new CreatingResult() { Created = true, Ping = false, AccessKey = AK };
             return Result;
         }
@@ -86,6 +86,7 @@ namespace WebServiceTest2
         public string Name { get; set; }
         public int Port { get; set; }
         private string AccessKey;
+        public int Color { get; set; } 
         public DateTime CreationDate { get; set; }
 
         public bool CheckAK(string AK)
@@ -98,10 +99,11 @@ namespace WebServiceTest2
 
         }
 
-        public Server(string IP, string Name, int Port, string AK)
+        public Server(string IP, string Name, int Port, int Color, string AK)
         {
             this.IP = IP;
             this.Name = Name;
+            this.Color = Color;
             this.Port = Port;
             this.AccessKey = AK;
             CreationDate = DateTime.Now;
