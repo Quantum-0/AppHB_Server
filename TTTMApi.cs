@@ -24,12 +24,20 @@ namespace WebServiceTest2
         public List<Server> Get()
         {
             Servers.RemoveAll(s => DateTime.Now.Subtract(s.CreationDate).TotalMinutes > 10);
+            for (int i = 0; i < Servers.Count; i++)
+            {
+                Servers[i].id = i;
+
+                if (Servers[i].Port != 0)
+                    ; // Пропинговать
+
+            }
             return Servers;
         }
 
         [WebMethod(Description = "Добавление своего сервера в список серверов")]
         [ScriptMethod(UseHttpGet = true)]
-        public CreatingResult Add(string Name, int Port, int Color)
+        public CreatingResult Add(string Name, string ServerName, int Color)
         {
             var request = this.Context.Request;
             var IP = string.Empty;
@@ -38,11 +46,10 @@ namespace WebServiceTest2
             else if (request.ServerVariables.AllKeys.Contains("HTTP_X_FORWARDED_FOR"))
                 IP = request.ServerVariables["HTTP_X_FORWARDED_FOR"];
             else
-                IP = request.ServerVariables["REMOTE_ADDR"];//.UserHostAddress;
-            var AK = Hash(Name + IP + Port.ToString() + DateTime.Now.ToString());
-            Servers.Add(new Server(IP, Name, Port, Color, AK));
-            var ping = PingHost(IP, Port);
-            var Result = new CreatingResult() { Created = true, Ping = ping, AccessKey = AK };
+                IP = request.ServerVariables["REMOTE_ADDR"];
+            var AK = WebServiceTest2.Server.Hash(Name + IP + DateTime.Now.ToString() + '1');
+            Servers.Add(new Server(IP, Name, ServerName, Color, AK));
+            var Result = new CreatingResult() { AccessKey = AK };
             return Result;
         }
 
@@ -74,28 +81,62 @@ namespace WebServiceTest2
             }
         }
 
-        static string Hash(string input)
+        [WebMethod(Description = "Запрос на подключение")]
+        [ScriptMethod(UseHttpGet = true)]
+        public bool WantConnect(string PublicKey)
         {
-            using (SHA1Managed sha1 = new SHA1Managed())
+            var SearchResult = Servers.FindAll(s => PublicKey == s.PublicKey);
+            if (SearchResult.Count == 1)
             {
-                var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
-                var sb = new StringBuilder(hash.Length * 2);
-
-                foreach (byte b in hash)
-                {
-                    // can be "x2" if you want lowercase
-                    sb.Append(b.ToString("X2"));
-                }
-
-                return sb.ToString();
+                SearchResult[0].setWanted();
+                return true;
             }
+            else
+                return false;
+        }
+
+        [WebMethod(Description = "Проверка, желает ли кто-то подключиться")]
+        [ScriptMethod(UseHttpGet = true)]
+        public bool GetWant(string AccessKey)
+        {
+            var SearchResult = Servers.FindAll(s => s.CheckAK(AccessKey));
+            if (SearchResult.Count == 1)
+                return SearchResult[0].getWanted();
+            else
+                return false;
+        }
+
+        [WebMethod(Description = "Запись готовности к подключению")]
+        [ScriptMethod(UseHttpGet = true)]
+        public bool WriteReady(string AccessKey, int Port)
+        {
+            var SearchResult = Servers.FindAll(s => s.CheckAK(AccessKey));
+            if (SearchResult.Count == 1)
+            {
+                SearchResult[0].Port = Port;
+                return true;
+            }
+            else
+                return false;
+        }
+
+        [WebMethod(Description = "Чтение готовности к подключению")]
+        [ScriptMethod(UseHttpGet = true)]
+        public int ReadReady(string PublicKey)
+        {
+            var SearchResult = Servers.FindAll(s => s.PublicKey == PublicKey);
+            if (SearchResult.Count == 1)
+            {
+                return SearchResult[0].Port;
+            }
+            else
+                return 0;
         }
     }
 
     public class CreatingResult
     {
-        public bool Created { get; set; }
-        public bool Ping { get; set; }
+        public bool Created { get; set; } = true;
         public string AccessKey { get; set; }
     }
 
@@ -106,12 +147,25 @@ namespace WebServiceTest2
 
     public class Server
     {
+        public int id { get; set; }
         public string IP { get; set; }
         public string Name { get; set; }
         public int Port { get; set; }
         private string AccessKey;
+        public string PublicKey { get; set; }
         public int Color { get; set; } 
         public DateTime CreationDate { get; set; }
+        public string ServerName { get; set; }
+        private bool Wanted;
+
+        public void setWanted()
+        {
+            Wanted = true;
+        }
+        public bool getWanted()
+        {
+            return Wanted;
+        }
 
         public bool CheckAK(string AK)
         {
@@ -123,13 +177,30 @@ namespace WebServiceTest2
 
         }
 
-        public Server(string IP, string Name, int Port, int Color, string AK)
+        public static string Hash(string input)
+        {
+            using (SHA1Managed sha1 = new SHA1Managed())
+            {
+                var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(input));
+                var sb = new StringBuilder(hash.Length * 2);
+
+                foreach (byte b in hash)
+                {
+                    sb.Append(b.ToString("X2"));
+                }
+
+                return sb.ToString();
+            }
+        }
+
+        public Server(string IP, string Name, string ServerName, int Color, string AK)
         {
             this.IP = IP;
             this.Name = Name;
+            this.ServerName = ServerName;
             this.Color = Color;
-            this.Port = Port;
             this.AccessKey = AK;
+            PublicKey = Hash(Name + IP + DateTime.Now.ToString() + '2');
             CreationDate = DateTime.Now;
         }
     }
