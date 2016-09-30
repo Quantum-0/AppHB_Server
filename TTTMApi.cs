@@ -75,7 +75,7 @@ namespace WebServiceTest2
                 client.Close();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -132,6 +132,33 @@ namespace WebServiceTest2
             else
                 return 0;
         }
+
+        [WebMethod(Description = "Запись клиентского EP")]
+        [ScriptMethod(UseHttpGet = true)]
+        public bool WriteClientEP(string PublicKey, string IP, int Port)
+        {
+            var SearchResult = Servers.FindAll(s => PublicKey == s.PublicKey);
+            if (SearchResult.Count == 1)
+            {
+                SearchResult[0].setClient(new Client() { IP = IP, Port = Port});
+                return true;
+            }
+            else
+                return false;
+        }
+
+        [WebMethod(Description = "Чтение IP клиента")]
+        [ScriptMethod(UseHttpGet = true)]
+        public Client ReadClientEP(string AccessKey)
+        {
+            var SearchResult = Servers.FindAll(s => s.CheckAK(AccessKey));
+            if (SearchResult.Count == 1)
+            {
+                return SearchResult[0].getClient();
+            }
+            else
+                return null;
+        }
     }
 
     public class CreatingResult
@@ -143,6 +170,12 @@ namespace WebServiceTest2
     public class RemovingResult
     {
         public bool Result;
+    }
+
+    public class Client
+    {
+        public string IP { get; set; }
+        public int Port { get; set; }
     }
 
     public class Server
@@ -157,6 +190,7 @@ namespace WebServiceTest2
         public DateTime CreationDate { get; set; }
         public string ServerName { get; set; }
         private bool Wanted;
+        private Client Client;
 
         public void setWanted()
         {
@@ -165,6 +199,15 @@ namespace WebServiceTest2
         public bool getWanted()
         {
             return Wanted;
+        }
+
+        public void setClient(Client Client)
+        {
+            this.Client = Client;
+        }
+        public Client getClient()
+        {
+            return Client;
         }
 
         public bool CheckAK(string AK)
