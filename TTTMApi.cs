@@ -122,15 +122,18 @@ namespace WebServiceTest2
 
         [WebMethod(Description = "Чтение готовности к подключению")]
         [ScriptMethod(UseHttpGet = true)]
-        public int ReadReady(string PublicKey)
+        public ServerReadyResult ReadReady(string PublicKey)
         {
             var SearchResult = Servers.FindAll(s => s.PublicKey == PublicKey);
             if (SearchResult.Count == 1)
             {
-                return SearchResult[0].Port;
+                if (SearchResult[0].Port != 0)
+                    return new ServerReadyResult() { Ready = true, IP = SearchResult[0].IP, Port = SearchResult[0].Port };
+                else
+                    return default(ServerReadyResult);
             }
             else
-                return 0;
+                return default(ServerReadyResult);
         }
 
         [WebMethod(Description = "Запись клиентского EP")]
@@ -170,6 +173,13 @@ namespace WebServiceTest2
     public class RemovingResult
     {
         public bool Result;
+    }
+
+    public struct ServerReadyResult
+    {
+        public bool Ready;
+        public string IP;
+        public int Port;
     }
 
     public class Client
@@ -247,6 +257,4 @@ namespace WebServiceTest2
             CreationDate = DateTime.Now;
         }
     }
-
-
 }
