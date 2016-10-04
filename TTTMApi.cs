@@ -47,6 +47,13 @@ namespace WebServiceTest2
                 IP = request.ServerVariables["HTTP_X_FORWARDED_FOR"];
             else
                 IP = request.ServerVariables["REMOTE_ADDR"];
+
+            // Проверки всякие
+            if (Servers.Count(s => s.IP == IP) > 5)
+                return null;
+            if (Servers.Count(s => s.ServerName == ServerName) > 2)
+                return null;
+
             var AK = WebServiceTest2.Server.Hash(Name + IP + DateTime.Now.ToString() + '1');
             Servers.Add(new Server(IP, Name, ServerName, Color, AK));
             var Result = new CreatingResult() { AccessKey = AK };
@@ -101,7 +108,10 @@ namespace WebServiceTest2
         {
             var SearchResult = Servers.FindAll(s => s.CheckAK(AccessKey));
             if (SearchResult.Count == 1)
+            {
+                SearchResult[0].Update();
                 return SearchResult[0].getWanted();
+            }
             else
                 return false;
         }
