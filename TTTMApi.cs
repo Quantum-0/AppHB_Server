@@ -23,16 +23,16 @@ namespace WebServiceTest2
         [ScriptMethod(UseHttpGet = true)]
         public List<Server> Get()
         {
-            Servers.RemoveAll(s => DateTime.Now.Subtract(s.CreationDate).TotalMinutes > 10);
+            Servers.RemoveAll(s => DateTime.Now.Subtract(s.GetLastUpdate()).TotalSeconds > 60);
+            var Result = new List<Server>();
             for (int i = 0; i < Servers.Count; i++)
             {
                 Servers[i].id = i;
 
-                if (Servers[i].Port != 0)
-                    ; // Пропинговать
-
+                if (!Servers[i].getWanted())
+                    Result.Add(Servers[i]);
             }
-            return Servers;
+            return Result;
         }
 
         [WebMethod(Description = "Добавление своего сервера в список серверов")]
@@ -137,7 +137,7 @@ namespace WebServiceTest2
         }
 
         [WebMethod(Description = "Запись клиентского EP")]
-        [ScriptMethod(UseHttpGet = true)]
+        //[ScriptMethod(UseHttpGet = true)]
         public bool WriteClientEP(string PublicKey, string IP, int Port)
         {
             var SearchResult = Servers.FindAll(s => PublicKey == s.PublicKey);
@@ -161,6 +161,20 @@ namespace WebServiceTest2
             }
             else
                 return null;
+        }
+        
+        [WebMethod(Description = "Обновление сервера (очистка)")]
+        [ScriptMethod(UseHttpGet = true)]
+        public bool Clear(string AccessKey)
+        {
+            var SearchResult = Servers.FindAll(s => s.CheckAK(AccessKey));
+            if (SearchResult.Count == 1)
+            {
+                SearchResult[0].Clear();
+                return true;
+            }
+            else
+                return false; ;
         }
     }
 
@@ -198,9 +212,19 @@ namespace WebServiceTest2
         public string PublicKey { get; set; }
         public int Color { get; set; } 
         public DateTime CreationDate { get; set; }
+        private DateTime UpdateDate { get; set; }
         public string ServerName { get; set; }
         private bool Wanted;
         private Client Client;
+
+        public void Update()
+        {
+            UpdateDate = DateTime.Now;
+        }
+        public DateTime GetLastUpdate()
+        {
+            return UpdateDate;
+        }
 
         public void setWanted()
         {
@@ -223,6 +247,14 @@ namespace WebServiceTest2
         public bool CheckAK(string AK)
         {
             return (AccessKey == AK);
+        }
+
+        public bool Clear()
+        {
+            Port = 0;
+            Wanted = false;
+            Client = null;
+            return true;
         }
 
         public Server()
