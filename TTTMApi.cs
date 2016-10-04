@@ -18,7 +18,7 @@ namespace WebServiceTest2
     public class TTTMApiClass : WebService
     {
         private static List<Server> Servers = new List<Server>();        
-
+        
         [WebMethod(Description = "Получение списка серверов")]
         [ScriptMethod(UseHttpGet = true)]
         public List<Server> Get()
@@ -29,7 +29,7 @@ namespace WebServiceTest2
             {
                 Servers[i].id = i;
 
-                if (!Servers[i].getWanted())
+                //if (!Servers[i].getWanted())
                     Result.Add(Servers[i]);
             }
             return Result;
@@ -287,6 +287,7 @@ namespace WebServiceTest2
             this.AccessKey = AK;
             PublicKey = Hash(Name + IP + DateTime.Now.ToString() + '2');
             CreationDate = DateTime.Now;
+            UpdateDate = DateTime.Now;
         }
     }
 }
