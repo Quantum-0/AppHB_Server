@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -186,12 +187,44 @@ namespace WebServiceTest2
             else
                 return false; ;
         }
+
+        [WebMethod(Description = "Получение MD5 последней версии")]
+        [ScriptMethod(UseHttpGet = true)]
+        public UpdData GetUpdatingData()
+        {
+            MD5 md5 = MD5.Create();
+            var path = Server.MapPath("/TTTM.exe");
+            using (FileStream fs = new FileStream(path, FileMode.Open))
+            {
+                var hash = md5.ComputeHash(fs);
+                var sb = new StringBuilder(hash.Length * 2);
+                foreach (byte b in hash)
+                    sb.Append(b.ToString("X2"));
+                var dt = File.GetLastWriteTimeUtc(path);
+                return new UpdData() { Hash = sb.ToString(), Date = dt };
+            }
+        }
+
+        /*[HttpGet]
+        public HttpResponseMessage GetUpdate()
+        {
+            var Path = "";// Server.MapPath()
+            HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
+            var stream = new FileStream(Path, FileMode.Open);
+
+        }*/
     }
 
     public class CreatingResult
     {
         public bool Created { get; set; } = true;
         public string AccessKey { get; set; }
+    }
+
+    public class UpdData
+    {
+        public string Hash;
+        public DateTime Date;
     }
 
     public class RemovingResult
